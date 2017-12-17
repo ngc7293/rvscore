@@ -3,50 +3,121 @@
     <head>
         <title>RVGL Times</title>
         <link rel="stylesheet" href="{% static "rvgl.min.css" %}" />
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
     </head>
     <body>
         <div id="content">
             <div id="track">
                 <span>
                     <span class="label">Track:</span>
-                    <select>
-                        <option val="botanical-garden">Botanical garden</option>
-                        <option val="ghost-town-1">Ghost town 1</option>
-                        <option val="ghost-town-2">Ghost town 2</option>
-                        <option val="museum-1">Museum 1</option>
-                        <option val="museum-2">Museum 2</option>
-                        <option val="supermarket-1">Supermarket 1</option>
-                        <option val="supermarket-2">Supermarket 2</option>
-                        <option val="rooftops">Rooftops</option>
-                        <option val="toys-in-the-hood-1">Toys in the hood 1</option>
-                        <option val="toys-in-the-hood-2">Toys in the hood 2</option>
-                        <option val="toy-world-1">Toy world 1</option>
-                        <option val="toy-world-2">Toy world 2</option>
-                        <option val="toytanic-1">Toytanic 1</option>
-                        <option val="toytanic-1">Toytanic 2</option>
-                    </select>
-
-                    (<select>
-                        <option val="normal">Normal</option>
-                        <option val="mirror">Mirror</option>
-                        <option val="reverse">Reverse</option>
-                        <option val="reversemirror">Reverse Mirror</option>
-                    </select>)
+                    <span id="track"></span> <span id="mode"></span>
                 </span>
             </div>
             <div id="table">
                 <span>
                     <span class="label">Rating:</span>
-                    <select>
-                        <option val="global">Global</option>
-                        <option val="rookie">Rookie</option>
-                        <option val="amateur">Amateur</option>
-                        <option val="advanced">Advanced</option>
-                        <option val="semi-pro">Semi-pro</option>
-                        <option val="pro">Pro</option>
-                    </select>
+                    <span id="rating"></span>
                 </span>
+                <table id="times">
+                </table>
             </div>
         </div>
     </body>
+    <script>
+        var tracks  = ['toys-in-the-hood-1', 'supermarket-2', 'museum-2', 'botanical-garden', 'rooftops', 'toy-world-1', 'ghost-town-1', 'toy-world-2', 'toys-in-the-hood-2', 'toytanic-1', 'museum-1', 'supermarket-1', 'ghost-town-2', 'toytanic-2'];
+        var modes   = ['normal', 'mirror', 'reverse', 'reversemirror'];
+        var ratings = ['global', 'rookie', 'amateur', 'advanced', 'semi-pro', 'pro'];
+        var nocap = ['a', 'in', 'the'];
+
+        var current_track_index = 0;
+        var current_mode_index = 0;
+        var current_rating_index = 0;
+
+        function cap(s) { 
+            r = ''
+            for (let t of s.split(" ")) {
+                r += (nocap.includes(t) ? t : t.charAt(0).toUpperCase() + t.slice(1)) + " ";
+            }
+            return r.trim();
+        }
+
+        function trackf(track) { 
+            return cap(track.replace(/-/g, " ")); 
+        }
+
+        function ratingf(rating) { 
+            return cap(rating); 
+        }
+
+        function modef(mode) { 
+            if (mode == 'normal') { return ''; }
+            if (mode == 'reversemirror') { return '(Reverse Mirror)'; }
+            return "(" + cap(mode) + ")"
+        }
+
+        function change_track(keycode) {
+            if (keycode == 39)
+                current_track_index = ++current_track_index % tracks.length;
+            else
+                current_track_index =  --current_track_index < 0 ? tracks.length - 1 : current_track_index;
+        }
+
+        function change_mode(keycode) {
+            if (keycode == 38)
+                current_mode_index += current_mode_index % 2 == 0 ? 1 : -1;
+            else
+                current_mode_index += current_mode_index >= 2 ? -2 : 2;
+        }
+
+        function change_rating() {
+            current_rating_index = ++current_rating_index % ratings.length;
+        }
+
+        function request_update() {
+            var xmlhttp = new XMLHttpRequest();
+            var url = "/json" +
+                "/" + tracks[current_track_index] + 
+                "/" + modes[current_mode_index] + 
+                "/" + ratings[current_rating_index] + "/";
+            xmlhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    do_update(this.responseText);
+                }
+            };
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        }
+
+        function do_update(json) {
+            var times = JSON.parse(json);
+            $('table#times').html('');
+            
+            for (var i = 0; i < times.length - 1; i++) {
+                $('table#times').append($('<tr><td>' + times[i]['time'] + "</td><td>" + times[i]['profile'] + "</td><td>" + times[i]['car'] + "</td></tr>"));
+            }
+            for (var i = times.length - 1; i < 10; i++) {
+                $('table#times').append($('<tr><td>---------</td><td>----------------</td><td>--------------------</td></tr>'));
+            }
+
+            $("span#track").text( trackf(tracks[current_track_index]) );
+            $("span#mode").text( modef(modes[current_mode_index]) );
+            $("span#rating").text( ratingf(ratings[current_rating_index]) );
+        }
+
+        $(document).keydown(function(e) {
+            if (e.keyCode == 37 || e.keyCode == 39) { change_track(e.keyCode); request_update(); }
+            if (e.keyCode == 38 || e.keyCode == 40) { change_mode(e.keyCode); request_update(); }
+            if (e.keyCode == 13) { change_rating(); request_update(); }
+        });
+
+        $(document).ready(function() {
+            $("span#track").text(trackf(tracks[current_track_index]));
+            $("span#mode").text(modef(modes[current_mode_index]));
+            $("span#rating").text(ratingf(ratings[current_rating_index]));
+            request_update(0)
+        });
+    </script>
 </html>

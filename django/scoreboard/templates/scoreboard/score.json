@@ -1,0 +1,10 @@
+[
+{% for time in times %}
+    {
+        "time":"{{ time.strtime }}",
+        "profile":"{{ time.profile }}",
+        "car":"{{ time.car }}"
+    },
+{% endfor %}
+{}
+]
