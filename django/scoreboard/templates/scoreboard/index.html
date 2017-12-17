@@ -1,0 +1,52 @@
+{% load static %}
+<html>
+    <head>
+        <title>RVGL Times</title>
+        <link rel="stylesheet" href="{% static "rvgl.min.css" %}" />
+    </head>
+    <body>
+        <div id="content">
+            <div id="track">
+                <span>
+                    <span class="label">Track:</span>
+                    <select>
+                        <option val="botanical-garden">Botanical garden</option>
+                        <option val="ghost-town-1">Ghost town 1</option>
+                        <option val="ghost-town-2">Ghost town 2</option>
+                        <option val="museum-1">Museum 1</option>
+                        <option val="museum-2">Museum 2</option>
+                        <option val="supermarket-1">Supermarket 1</option>
+                        <option val="supermarket-2">Supermarket 2</option>
+                        <option val="rooftops">Rooftops</option>
+                        <option val="toys-in-the-hood-1">Toys in the hood 1</option>
+                        <option val="toys-in-the-hood-2">Toys in the hood 2</option>
+                        <option val="toy-world-1">Toy world 1</option>
+                        <option val="toy-world-2">Toy world 2</option>
+                        <option val="toytanic-1">Toytanic 1</option>
+                        <option val="toytanic-1">Toytanic 2</option>
+                    </select>
+
+                    (<select>
+                        <option val="normal">Normal</option>
+                        <option val="mirror">Mirror</option>
+                        <option val="reverse">Reverse</option>
+                        <option val="reversemirror">Reverse Mirror</option>
+                    </select>)
+                </span>
+            </div>
+            <div id="table">
+                <span>
+                    <span class="label">Rating:</span>
+                    <select>
+                        <option val="global">Global</option>
+                        <option val="rookie">Rookie</option>
+                        <option val="amateur">Amateur</option>
+                        <option val="advanced">Advanced</option>
+                        <option val="semi-pro">Semi-pro</option>
+                        <option val="pro">Pro</option>
+                    </select>
+                </span>
+            </div>
+        </div>
+    </body>
+</html>
