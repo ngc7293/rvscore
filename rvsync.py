@@ -3,33 +3,53 @@
 """ Read RVGL time files """
 from pathlib import Path
 import os
+import configparser
 import json
 import requests
 
-URL = 'http://127.0.0.1:8000/sync'
-ROOT_FOLDER = '/usr/share/games/rvgl/times'
+ROOT_FOLDER = os.getcwd()
+
 RV_HDR = b'\x02\x19\x00\x00\x86\x2c\x00\x00\x9c\x4d\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 RV_PAD = b'\x40\x77\x1b\x00\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x00\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x2d\x00'
 
 def main():
     data = {}
-    walk_read(Path(ROOT_FOLDER), data)
+    walk_read(Path(ROOT_FOLDER + "/times/"), data)
     datajson = json.dumps(data)
 
+    cp = configparser.ConfigParser()
+    cp.read(ROOT_FOLDER + "/profiles/rvsync.ini")
+    url = cp.get('Sync', 'url').strip('"')
+    count = cp.getint('Sync', 'count')
+
+    if url[-1:] == '/':
+        url = url[:-1]
+
     # Push new times
-    r = requests.post(URL, datajson);
+    try:
+        r = requests.post(url + "/sync/", datajson);
+    except:
+        print("[PUSH] Connection failed")
+        exit(1)
+    
     if r.status_code == 200:
         print('[PUSH] {} new times'.format(r.text))
     else:
         print("[PUSH] Err {}".format(r.status_code))
 
     # Get new times
-    r = requests.get(URL)
-    if r.status_code == 200:
-        num = walk_write(json.loads(r.text))
-        print('[PULL] {} new times'.format(num))
-    else:
-        print("[PULL] Err {}".format(r.status_code))
+    if not count == 0:
+        try:
+            r = requests.get(url + "/sync/" + str(count) + "/")
+        except:
+            print("[PULL] Connection failed")
+            exit(1)
+
+        if r.status_code == 200:
+            num = walk_write(json.loads(r.text))
+            print('[PULL] {} new times'.format(num))
+        else:
+            print("[PULL] Err {}".format(r.status_code))
 
 
 def walk_read(root, data):
@@ -86,7 +106,7 @@ def walk_write(data):
     for mode in data:
         for category in data[mode]:
             for track in data[mode][category]:
-                new += write_times_file(data[mode][category][track], "{}/{}/{}/{}.times".format(ROOT_FOLDER, mode, category, track))
+                new += write_times_file(data[mode][category][track], "{}/{}/{}/{}.times".format(ROOT_FOLDER + "/times/", mode, category, track))
     return new
 
 def write_times_file(synctimes, file):

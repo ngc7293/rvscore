@@ -23,7 +23,7 @@ def insert_time(mode, category, track, time):
         return 0
 
 
-def get_times_json():
+def get_times_json(count):
     """ Get JSON of best times """
     modes = ['normal', 'mirror', 'reverse', 'reversemirror']
     categories = ['rookie', 'amateur', 'advanced', 'semi-pro', 'pro']
@@ -39,7 +39,7 @@ def get_times_json():
             data[mode][category] = {}
 
             for track in tracks:
-                times = get_times(mode, category, track)
+                times = get_times(mode, category, track, count)
                 if times:
                     data[mode][category][track] = times
                     empty_cat = False
@@ -55,13 +55,13 @@ def get_times_json():
     return json.dumps(data)
 
 
-def get_times(mode, category, track):
+def get_times(mode, category, track, count):
     """
         Get times according to param 
         Currently this only returns the single best time
     """
     times = []
-    for time in Time.objects.filter(track=track, mode=mode, car__category=category).order_by('time')[:1]:
+    for time in Time.objects.filter(track=track, mode=mode, car__category=category).order_by('time')[:count]:
         times.append({
             'time': time.time,
             'profile': time.profile,

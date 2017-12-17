@@ -23,11 +23,11 @@ def scoreboard_json(request, track, mode, category):
     return render(request, 'scoreboard/score.json', {'times': times[:10]})
 
 @csrf_exempt
-def sync(request):
+def sync(request, count=1):
     if request.method == 'POST':
         new = add_times_from_json(request.body)
         return HttpResponse(str(new))
 
     if request.method == 'GET':
-        payload = get_times_json()
+        payload = get_times_json(count)
         return HttpResponse(payload)
